@@ -3,15 +3,34 @@
    NO localStorage/sessionStorage — in-memory only
    ═══════════════════════════════════════════════════ */
 
-// ── State (in-memory) ──
-let currentTheme = 'light';
+// ── State ──
+let currentTheme = 'dark'; // Default: dark mode
 let currentPage = 1;
 const PER_PAGE = 12;
+
+// ── Theme Persistence via cookie ──
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? match[2] : null;
+}
+
+function setCookie(name, value, days) {
+  const d = new Date();
+  d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+  document.cookie = name + '=' + value + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax';
+}
+
+function getPreferredTheme() {
+  const saved = getCookie('dcg-theme');
+  if (saved === 'light' || saved === 'dark') return saved;
+  return 'dark'; // Default to dark
+}
 
 // ── Theme Toggle ──
 function setTheme(theme) {
   currentTheme = theme;
   document.documentElement.setAttribute('data-theme', theme);
+  setCookie('dcg-theme', theme, 365);
   lucide.createIcons();
 }
 
@@ -458,6 +477,10 @@ function initContactForm() {
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', () => {
+  // Apply saved theme (default: dark)
+  currentTheme = getPreferredTheme();
+  document.documentElement.setAttribute('data-theme', currentTheme);
+
   // Theme toggle
   const themeBtn = document.getElementById('themeToggle');
   if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
